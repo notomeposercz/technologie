@@ -1,6 +1,6 @@
 <?php
 /**
- * Fallback repository pro práci s technologiemi bez Doctrine
+ * Fallback repository pro práci s technologiemi bez Doctrine - OPRAVENÁ VERZE
  */
 
 declare(strict_types=1);
@@ -150,10 +150,7 @@ class TechnologieDbRepository
         if (\Db::getInstance()->execute($sql)) {
             $id = \Db::getInstance()->Insert_ID();
             // Nastavení ID do entity pomocí reflection (protože nemáme setter)
-            $reflection = new \ReflectionClass($technologie);
-            $property = $reflection->getProperty('id');
-            $property->setAccessible(true);
-            $property->setValue($technologie, (int)$id);
+            $this->setEntityId($technologie, (int)$id);
         }
     }
 
@@ -175,6 +172,41 @@ class TechnologieDbRepository
     }
 
     /**
+     * Nastavení ID do entity pomocí reflection
+     */
+    private function setEntityId(Technologie $technologie, int $id): void
+    {
+        try {
+            $reflection = new \ReflectionClass($technologie);
+            $property = $reflection->getProperty('id');
+            $property->setAccessible(true);
+            $property->setValue($technologie, $id);
+        } catch (\Exception $e) {
+            // Pokud se nepodaří nastavit ID, logujeme chybu ale nekončíme
+            error_log('Cannot set entity ID: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Nastavení data do entity pomocí reflection
+     */
+    private function setEntityDate(Technologie $technologie, string $propertyName, string $dateString): void
+    {
+        try {
+            $reflection = new \ReflectionClass($technologie);
+            $property = $reflection->getProperty($propertyName);
+            $property->setAccessible(true);
+            $property->setValue($technologie, new \DateTime($dateString));
+        } catch (\Exception $e) {
+            // Pokud se nepodaří nastavit datum, použijeme aktuální čas
+            $reflection = new \ReflectionClass($technologie);
+            $property = $reflection->getProperty($propertyName);
+            $property->setAccessible(true);
+            $property->setValue($technologie, new \DateTime());
+        }
+    }
+
+    /**
      * Převod pole výsledků na entity
      */
     private function convertToEntities(array $results): array
@@ -193,30 +225,63 @@ class TechnologieDbRepository
     {
         $technologie = new Technologie();
         
-        // Nastavení hodnot pomocí reflection
-        $reflection = new \ReflectionClass($technologie);
+        // Nastavení ID pomocí reflection
+        $this->setEntityId($technologie, (int)$row['id_technologie']);
         
-        // ID
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setAccessible(true);
-        $idProperty->setValue($technologie, (int)$row['id_technologie']);
+        // Nastavení základních vlastností
+        $technologie->setName($row['name'] ?? '');
+        $technologie->setDescription($row['description'] ?? '');
+        $technologie->setImage($row['image'] ?? '');
+        $technologie->setPosition((int)($row['position'] ?? 0));
+        $technologie->setActive((bool)($row['active'] ?? false));
         
-        // Ostatní vlastnosti
-        $technologie->setName($row['name']);
-        $technologie->setDescription($row['description']);
-        $technologie->setImage($row['image']);
-        $technologie->setPosition((int)$row['position']);
-        $technologie->setActive((bool)$row['active']);
-        
-        // Datum
-        $dateAddProperty = $reflection->getProperty('dateAdd');
-        $dateAddProperty->setAccessible(true);
-        $dateAddProperty->setValue($technologie, new \DateTime($row['date_add']));
-        
-        $dateUpdProperty = $reflection->getProperty('dateUpd');
-        $dateUpdProperty->setAccessible(true);
-        $dateUpdProperty->setValue($technologie, new \DateTime($row['date_upd']));
+        // Nastavení datumů pomocí reflection
+        $this->setEntityDate($technologie, 'dateAdd', $row['date_add'] ?? date('Y-m-d H:i:s'));
+        $this->setEntityDate($technologie, 'dateUpd', $row['date_upd'] ?? date('Y-m-d H:i:s'));
         
         return $technologie;
+    }
+
+    /**
+     * Kontrola existence technologie podle názvu (pro validaci unikátnosti)
+     */
+    public function findOneByName(string $name, ?int $excludeId = null): ?Technologie
+    {
+        $sql = 'SELECT * FROM `' . _DB_PREFIX_ . 'technologie` 
+                WHERE name = "' . pSQL($name) . '"';
+        
+        if ($excludeId !== null) {
+            $sql .= ' AND id_technologie != ' . (int)$excludeId;
+        }
+        
+        $result = \Db::getInstance()->getRow($sql);
+        
+        if (!$result) {
+            return null;
+        }
+
+        return $this->convertToEntity($result);
+    }
+
+    /**
+     * Získání počtu všech technologií
+     */
+    public function getTotalCount(): int
+    {
+        $sql = 'SELECT COUNT(*) as total FROM `' . _DB_PREFIX_ . 'technologie`';
+        $result = \Db::getInstance()->getRow($sql);
+        
+        return (int)($result['total'] ?? 0);
+    }
+
+    /**
+     * Získání počtu aktivních technologií
+     */
+    public function getActiveCount(): int
+    {
+        $sql = 'SELECT COUNT(*) as total FROM `' . _DB_PREFIX_ . 'technologie` WHERE active = 1';
+        $result = \Db::getInstance()->getRow($sql);
+        
+        return (int)($result['total'] ?? 0);
     }
 }
