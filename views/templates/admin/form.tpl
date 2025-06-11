@@ -1,6 +1,6 @@
 {**
- * Admin šablona pro formulář technologie - OPRAVENÁ VERZE
- * Kompatibilní s PrestaShop 8.2.0
+ * Admin šablona pro formulář technologie - KRITICKY OPRAVENÁ VERZE
+ * Problém: Nesprávné jméno submit tlačítka
  *}
 
 <div class="panel technologie-admin">
@@ -24,7 +24,16 @@
             </div>
         {/if}
 
-        {* KRITICKÉ: Správný action URL a enctype *}
+        {* KRITICKÁ OPRAVA: Přidán debug panel *}
+        <div id="debug-panel" style="background: #f0f0f0; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; font-family: monospace; font-size: 12px;">
+            <strong>🔧 DEBUG INFORMACE:</strong><br>
+            Table name: {$table|default:'NENÍ NASTAVENO'}<br>
+            Submit button name: submitAdd{$table|default:'technologie'}<br>
+            Is edit: {if $is_edit}ANO{else}NE{/if}<br>
+            <div id="form-debug-info"></div>
+        </div>
+
+        {* KRITICKY DŮLEŽITÉ: Správný action URL a enctype *}
         <form action="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}" 
               method="post" 
               enctype="multipart/form-data" 
@@ -82,7 +91,7 @@
                         </div>
                     {/if}
                     
-                    {* KRITICKÉ: Správný name="image" *}
+                    {* KRITICKY DŮLEŽITÉ: Správný name="image" *}
                     <input type="file"
                            name="image"
                            class="form-control"
@@ -92,10 +101,10 @@
                         {l s='Podporované formáty: JPG, PNG, GIF, WebP. Maximální velikost: 2MB.' mod='technologie'}
                     </p>
                     
-                    {* Debug info - ukáže co se odesílá *}
-                    <div id="debug-info" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border: 1px solid #ccc; font-family: monospace; font-size: 12px; display: none;">
-                        <strong>Debug informace:</strong><br>
-                        <span id="debug-content"></span>
+                    {* Live upload info *}
+                    <div id="upload-info" style="margin-top: 10px; padding: 10px; background: #e8f4f8; border: 1px solid #bee5eb; border-radius: 4px; display: none;">
+                        <strong>📁 Informace o souboru:</strong><br>
+                        <span id="file-info"></span>
                     </div>
                 </div>
             </div>
@@ -138,9 +147,8 @@
             {* Tlačítka *}
             <div class="form-group">
                 <div class="col-lg-9 col-lg-offset-3">
-                    {* KRITICKÉ: Správný name="submitAddtechnologie" *}
-                    <button type="submit" 
-                            name="submitAdd{$table}" value="1" 
+                    {* KRITICKÁ OPRAVA: Správné jméno submit tlačítka *}
+                    <button type="submit" name="submitAddtechnologie" value="1"
                             class="btn btn-primary btn-technologie"
                             id="submit-btn">
                         <i class="icon-save"></i>
@@ -161,35 +169,50 @@
     </div>
 </div>
 
-{* Enhanced JavaScript s debugging *}
+{* Vylepšený JavaScript s kompletním debuggingem *}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Form script loaded');
+    console.log('🔧 Form script loaded');
     
     const form = document.getElementById('technologie-form');
     const imageInput = document.getElementById('technologie-image-input');
     const submitBtn = document.getElementById('submit-btn');
-    const debugInfo = document.getElementById('debug-info');
-    const debugContent = document.getElementById('debug-content');
+    const debugInfo = document.getElementById('form-debug-info');
+    const uploadInfo = document.getElementById('upload-info');
+    const fileInfo = document.getElementById('file-info');
 
-    // Debug function
-    function showDebug(message) {
-        debugContent.innerHTML += message + '<br>';
-        debugInfo.style.display = 'block';
-        console.log('DEBUG: ' + message);
+    function updateDebug(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        debugInfo.innerHTML += `[${timestamp}] ${message}<br>`;
+        console.log('🔧 DEBUG: ' + message);
     }
 
-    // Image preview functionality
+    updateDebug('JavaScript inicializován');
+    updateDebug('Submit button name: ' + (submitBtn ? submitBtn.name : 'NENALEZEN'));
+
+    // Enhanced image handling
     if (imageInput) {
         imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
-            showDebug('File selected: ' + (file ? file.name + ' (' + file.size + ' bytes)' : 'none'));
             
             if (file) {
-                // Validace typu souboru
+                updateDebug(`Soubor vybrán: ${file.name} (${file.size} bytes, ${file.type})`);
+                
+                // Zobrazení file info
+                fileInfo.innerHTML = `
+                    <strong>Název:</strong> ${file.name}<br>
+                    <strong>Typ:</strong> ${file.type}<br>
+                    <strong>Velikost:</strong> ${(file.size / 1024).toFixed(1)} KB<br>
+                    <strong>Poslední změna:</strong> ${new Date(file.lastModified).toLocaleString()}
+                `;
+                uploadInfo.style.display = 'block';
+                
+                // Validace typu
                 if (!file.type.match('image.*')) {
                     alert('{l s="Vyberte prosím obrázek" mod="technologie"}');
                     this.value = '';
+                    uploadInfo.style.display = 'none';
+                    updateDebug('CHYBA: Neplatný typ souboru');
                     return;
                 }
 
@@ -197,10 +220,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (file.size > 2 * 1024 * 1024) {
                     alert('{l s="Obrázek je příliš velký. Maximální velikost je 2MB" mod="technologie"}');
                     this.value = '';
+                    uploadInfo.style.display = 'none';
+                    updateDebug('CHYBA: Soubor příliš velký');
                     return;
                 }
 
-                showDebug('File validation passed');
+                updateDebug('Validace souboru prošla');
 
                 // Preview
                 const reader = new FileReader();
@@ -214,51 +239,66 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Vytvoření nového preview
                     const preview = document.createElement('div');
                     preview.className = 'image-preview mt-3';
-                    preview.innerHTML = '<p><strong>{l s="Náhled nového obrázku:" mod="technologie"}</strong></p>' +
-                                      '<img src="' + e.target.result + '" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />';
+                    preview.innerHTML = `
+                        <p><strong>{l s="Náhled nového obrázku:" mod="technologie"}</strong></p>
+                        <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />
+                    `;
                     
                     imageInput.parentNode.appendChild(preview);
-                    showDebug('Preview created');
+                    updateDebug('Preview vytvořen');
                 };
                 reader.readAsDataURL(file);
+            } else {
+                uploadInfo.style.display = 'none';
+                updateDebug('Soubor odstraněn');
             }
         });
     }
 
-    // Form submission debugging
+    // Enhanced form submission
     if (form) {
         form.addEventListener('submit', function(e) {
-            showDebug('Form submission started');
+            updateDebug('=== FORMULÁŘ SE ODESÍLÁ ===');
             
             const nameInput = document.querySelector('input[name="name"]');
             if (!nameInput.value.trim()) {
                 alert('{l s="Název technologie je povinný" mod="technologie"}');
                 e.preventDefault();
                 nameInput.focus();
+                updateDebug('CHYBA: Prázdný název - formulář zastaven');
                 return false;
             }
 
-            // Debug form data
+            // Detailní debug form data
             const formData = new FormData(form);
-            let debugData = 'Form data:<br>';
+            updateDebug('Form Data obsah:');
+            let hasFile = false;
             for (let [key, value] of formData.entries()) {
-                if (key === 'image' && value instanceof File) {
-                    debugData += key + ': FILE - ' + value.name + ' (' + value.size + ' bytes)<br>';
+                if (key === 'image' && value instanceof File && value.size > 0) {
+                    updateDebug(`  ${key}: FILE - ${value.name} (${value.size} bytes)`);
+                    hasFile = true;
+                } else if (key === 'image') {
+                    updateDebug(`  ${key}: NO FILE`);
                 } else {
-                    debugData += key + ': ' + value + '<br>';
+                    updateDebug(`  ${key}: ${value}`);
                 }
             }
-            showDebug(debugData);
+            
+            if (hasFile) {
+                updateDebug('✅ FORMULÁŘ OBSAHUJE SOUBOR K UPLOADU');
+            } else {
+                updateDebug('ℹ️ Formulář neobsahuje soubor k uploadu');
+            }
 
-            // Change button text to indicate processing
+            // Change button
             submitBtn.innerHTML = '<i class="icon-spinner icon-spin"></i> Ukládání...';
             submitBtn.disabled = true;
             
-            showDebug('Form submitted successfully');
+            updateDebug('✅ Formulář úspěšně odeslán');
         });
     }
 
-    showDebug('JavaScript initialization complete');
+    updateDebug('JavaScript plně načten a připraven');
 });
 </script>
 
@@ -294,8 +334,12 @@ document.addEventListener('DOMContentLoaded', function() {
     color: white;
 }
 
-#debug-info {
+#debug-panel {
     max-height: 200px;
     overflow-y: auto;
+}
+
+#upload-info {
+    font-size: 13px;
 }
 </style>
