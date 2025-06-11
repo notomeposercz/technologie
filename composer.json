@@ -1,0 +1,23 @@
+{
+    "name": "prestashop/technologie",
+    "description": "Modul pro správu technologií potisku v PrestaShop",
+    "type": "prestashop-module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Váš tým",
+            "email": "info@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "PrestaShop\\Module\\Technologie\\": "src/"
+        }
+    },
+    "config": {
+        "preferred-install": "dist"
+    }
+}

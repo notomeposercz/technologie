@@ -1,0 +1,40 @@
+# Routing konfigurace pro modul Technologie
+# Kompatibilní s PrestaShop 8.2.0
+
+technologie_front_list:
+    path: /reklamni-potisk
+    methods: [GET]
+    defaults:
+        _controller: 'PrestaShop\Module\Technologie\Controller\Front\TechnologieController::listAction'
+        _legacy_controller: 'TechnologieController'
+        _legacy_link: 'TechnologieController:list'
+    requirements:
+        # Žádné speciální požadavky pro základní route
+    options:
+        compiler_class: 'Symfony\Component\Routing\RouteCompiler'
+
+# Alternativní route s parametrem pro budoucí rozšíření (detail technologie)
+technologie_front_detail:
+    path: /reklamni-potisk/{slug}
+    methods: [GET]
+    defaults:
+        _controller: 'PrestaShop\Module\Technologie\Controller\Front\TechnologieController::detailAction'
+        _legacy_controller: 'TechnologieController'
+        _legacy_link: 'TechnologieController:detail'
+    requirements:
+        slug: '[a-zA-Z0-9\-]+'
+    options:
+        compiler_class: 'Symfony\Component\Routing\RouteCompiler'
+
+# AJAX endpoint pro načítání technologií
+technologie_ajax_get:
+    path: /reklamni-potisk/ajax/get-technologie
+    methods: [POST]
+    defaults:
+        _controller: 'PrestaShop\Module\Technologie\Controller\Front\TechnologieController::ajaxGetTechnologieAction'
+        _legacy_controller: 'TechnologieController'
+        _legacy_link: 'TechnologieController:ajaxGet'
+    requirements:
+        # AJAX endpoint - žádné speciální požadavky
+    options:
+        compiler_class: 'Symfony\Component\Routing\RouteCompiler'

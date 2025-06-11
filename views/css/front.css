@@ -1,0 +1,885 @@
+/**
+ * CSS styly pro front office modul Technologie potisku
+ * Kompatibilní s PrestaShop 8.2.0 a moderními prohlížeči
+ * Modernizovaný design s lepší UX a přístupností
+ */
+
+/* Import FontAwesome pokud není načten */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+
+/* CSS Custom Properties pro konzistentní design */
+:root {
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --secondary-color: #64748b;
+    --accent-color: #0ea5e9;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+
+    --border-color: #e2e8f0;
+    --border-radius: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 24px;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    --transition-fast: 0.15s ease-in-out;
+    --transition-normal: 0.3s ease-in-out;
+    --transition-slow: 0.5s ease-in-out;
+}
+
+/* Fallback pro ikonky pokud FontAwesome není dostupný */
+.fas::before, .fa::before {
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome", sans-serif;
+    font-weight: 900;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+/* Fallback obsah pro specifické ikonky */
+.fa-print::before { content: "\f02f"; }
+.fa-info-circle::before { content: "\f05a"; }
+.fa-envelope::before { content: "\f0e0"; }
+.fa-map-marker-alt::before { content: "\f3c5"; }
+.fa-home::before { content: "\f015"; }
+.fa-image::before { content: "\f03e"; }
+
+/* Základní styly pro stránku technologií */
+.technologie-page {
+    padding: 0;
+    background: var(--bg-secondary);
+    min-height: 60vh;
+}
+
+/* Breadcrumb navigace */
+.technologie-breadcrumb {
+    background: var(--bg-primary);
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.technologie-breadcrumb .breadcrumb {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-size: 0.875rem;
+}
+
+.technologie-breadcrumb .breadcrumb-item {
+    color: var(--text-secondary);
+}
+
+.technologie-breadcrumb .breadcrumb-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.technologie-breadcrumb .breadcrumb-item a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.technologie-breadcrumb .breadcrumb-item.active {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Úvodní sekce - modernizovaný gradient */
+.technologie-intro {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.technologie-intro::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.technologie-intro .container {
+    position: relative;
+    z-index: 1;
+}
+
+.technologie-intro .section-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+}
+
+.technologie-intro .section-description {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    line-height: 1.7;
+    max-width: 600px;
+    margin: 0;
+    font-weight: 400;
+    text-align: left;
+}
+
+/* Grid technologií */
+.technologie-grid {
+    padding: 3rem 0;
+    background: var(--bg-secondary);
+}
+
+.technologie-grid .container {
+    max-width: 1400px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Zajištění stejné výšky boxů a mezer mezi řádky */
+.technologie-grid .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin: 0;
+}
+
+.technologie-grid .row > [class*="col-"] {
+    display: flex;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+/* Karta technologie - modernizovaný design */
+.technologie-card {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.technologie-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(37, 99, 235, 0.02) 100%);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+    pointer-events: none;
+}
+
+.technologie-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-color);
+}
+
+.technologie-card:hover::before {
+    opacity: 1;
+}
+
+/* Obrázek technologie */
+.technologie-image {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+}
+
+.technologie-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+    filter: brightness(1.02) contrast(1.05);
+}
+
+.technologie-card:hover .technologie-img {
+    transform: scale(1.08);
+}
+
+/* Placeholder pro obrázek */
+.technologie-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    color: var(--text-muted);
+    position: relative;
+}
+
+.technologie-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    background: var(--primary-color);
+    opacity: 0.1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.technologie-placeholder i {
+    font-size: 3.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--primary-color);
+    opacity: 0.6;
+    position: relative;
+    z-index: 1;
+}
+
+.technologie-placeholder span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+}
+
+
+
+/* Obsah karty */
+.technologie-content {
+    padding: 2rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+}
+
+.technologie-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+}
+
+.technologie-description {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+    font-size: 0.95rem;
+}
+
+/* Akce v kartě */
+.technologie-actions {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.technologie-detail-btn {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.technologie-detail-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+    transition: left var(--transition-normal);
+}
+
+.technologie-detail-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.technologie-detail-btn:hover::before {
+    left: 100%;
+}
+
+.technologie-detail-btn i {
+    font-size: 0.875rem;
+}
+
+/* Kontaktní sekce */
+.technologie-contact {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    padding: 5rem 0;
+    margin-top: 4rem;
+    border-top: 1px solid var(--border-color);
+    position: relative;
+}
+
+.technologie-contact::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+}
+
+.contact-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+}
+
+.contact-description {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.7;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.contact-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.contact-buttons .btn {
+    border-radius: var(--border-radius);
+    padding: 1rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    min-width: 180px;
+    justify-content: center;
+}
+
+.contact-buttons .btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.contact-buttons .btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.contact-buttons .btn-outline-primary {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.contact-buttons .btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Prázdný stav */
+.technologie-empty {
+    padding: 5rem 0;
+    background: var(--bg-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    opacity: 0.6;
+}
+
+.empty-title {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.empty-description {
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.empty-state .btn {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.empty-state .btn:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Chybový stav */
+.technologie-error {
+    padding: 5rem 0;
+    background: var(--bg-secondary);
+}
+
+.error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.error-icon {
+    font-size: 5rem;
+    color: var(--danger-color);
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+.error-title {
+    font-size: 2rem;
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.error-message {
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-actions .btn {
+    border-radius: var(--border-radius);
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.error-actions .btn-primary {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+}
+
+.error-actions .btn-primary:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.error-actions .btn-outline-primary {
+    background: transparent;
+    border: 2px solid var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+.error-actions .btn-outline-primary:hover {
+    background: var(--text-secondary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Loading animace */
+.technologie-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    background: var(--bg-secondary);
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: relative;
+}
+
+.loading-spinner::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.3;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* Responsive design */
+@media (max-width: 1400px) {
+    .technologie-grid .container {
+        max-width: 100%;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .technologie-grid .container {
+        max-width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .technologie-intro .section-title {
+        font-size: 2.5rem;
+    }
+
+    .technologie-intro .section-description {
+        font-size: 1.125rem;
+    }
+
+    .technologie-image {
+        height: 240px;
+    }
+
+    .contact-title {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .technologie-intro {
+        padding: 2rem 0;
+    }
+
+    .technologie-intro .section-title {
+        font-size: 2rem;
+    }
+
+    .technologie-intro .section-description {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    .technologie-image {
+        height: 220px;
+    }
+
+    .technologie-content {
+        padding: 1.5rem;
+    }
+
+    .contact-title {
+        font-size: 1.75rem;
+    }
+
+    .contact-description {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    .contact-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .contact-buttons .btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 576px) {
+    .technologie-intro {
+        padding: 2rem 0;
+    }
+
+    .technologie-intro .section-title {
+        font-size: 1.75rem;
+    }
+
+    .technologie-grid {
+        padding: 2rem 0;
+    }
+
+    .technologie-contact {
+        padding: 3rem 0;
+    }
+
+    .technologie-content {
+        padding: 1.25rem;
+    }
+
+    .technologie-title {
+        font-size: 1.25rem;
+    }
+
+    .technologie-description {
+        font-size: 0.9rem;
+    }
+
+    .empty-state,
+    .error-state {
+        padding: 2rem 1rem;
+    }
+
+    .empty-title,
+    .error-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Animace pro AOS knihovnu */
+[data-aos] {
+    pointer-events: none;
+}
+
+[data-aos].aos-animate {
+    pointer-events: auto;
+}
+
+/* Accessibility vylepšení */
+.technologie-card:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+    box-shadow: var(--shadow-xl);
+}
+
+.technologie-detail-btn:focus,
+.contact-buttons .btn:focus,
+.empty-state .btn:focus,
+.error-actions .btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Vylepšené animace */
+.technologie-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hover efekty pro lepší UX */
+.technologie-card:hover .technologie-title {
+    color: var(--primary-color);
+    transition: color var(--transition-normal);
+}
+
+
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .technologie-card {
+        animation: none;
+    }
+
+    .technologie-card:hover {
+        transform: none;
+    }
+
+    .technologie-img {
+        transition: none;
+    }
+
+    .loading-spinner {
+        animation: none;
+    }
+}
+
+/* Dark mode support (pro budoucí použití) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+
+        --bg-primary: #1e293b;
+        --bg-secondary: #0f172a;
+        --bg-tertiary: #334155;
+
+        --border-color: #334155;
+    }
+}
+
+/* Print styly */
+@media print {
+    .technologie-page {
+        background: white !important;
+    }
+
+    .technologie-intro {
+        background: white !important;
+        color: black !important;
+        border-radius: 0 !important;
+    }
+
+    .technologie-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        break-inside: avoid;
+        background: white !important;
+    }
+
+    .technologie-card:hover {
+        transform: none !important;
+    }
+
+    .technologie-contact {
+        background: white !important;
+        border-radius: 0 !important;
+    }
+
+    .contact-buttons,
+    .technologie-actions {
+        display: none !important;
+    }
+}
+
+/* Utility classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
