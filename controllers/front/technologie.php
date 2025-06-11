@@ -1,13 +1,8 @@
 <?php
 /**
  * Front Office controller pro zobrazení technologií potisku
- *
- * @author    PrestaShop SA <contact@prestashop.com>
- * @copyright 2024 PrestaShop SA
- * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
+ * PRODUKČNÍ VERZE - bez debug kódu, s opraveným breadcrumb
  */
-
-
 
 // Načtení autoloaderu modulu
 require_once _PS_MODULE_DIR_ . 'technologie/technologie.php';
@@ -26,7 +21,6 @@ class TechnologieTechnologieModuleFrontController extends ModuleFrontController
     public function __construct()
     {
         parent::__construct();
-        // Repository se inicializuje lazy v getTechnologie() metodě
     }
 
     /**
@@ -66,9 +60,6 @@ class TechnologieTechnologieModuleFrontController extends ModuleFrontController
                 'upload_dir' => _MODULE_DIR_ . 'technologie/uploads/',
                 'has_technologie' => !empty($technologie)
             ]);
-
-            // Nastavení breadcrumb navigace
-            $this->addBreadcrumb();
 
             // Přidání CSS a JS assets
             $this->addAssets();
@@ -112,13 +103,6 @@ class TechnologieTechnologieModuleFrontController extends ModuleFrontController
                     }
                 }
             } catch (\Exception $e) {
-                // Doctrine není dostupné, použijeme fallback
-                PrestaShopLogger::addLog(
-                    'Technologie module: Failed to initialize repository: ' . $e->getMessage(),
-                    2,
-                    null,
-                    'Technologie'
-                );
                 // Nastavíme fallback repository
                 $this->technologieRepository = new TechnologieDbRepository();
             }
@@ -207,25 +191,34 @@ class TechnologieTechnologieModuleFrontController extends ModuleFrontController
     }
 
     /**
-     * Přidání breadcrumb navigace
+     * Přidání breadcrumb navigace - OPRAVENÁ VERZE
      */
-    private function addBreadcrumb()
+    protected function getBreadcrumbLinks()
     {
-        // Základní breadcrumb struktura
-        $breadcrumb = [
-            'links' => [
-                [
-                    'title' => 'Domů',
-                    'url' => $this->context->link->getPageLink('index')
-                ],
-                [
-                    'title' => 'Technologie potisku',
-                    'url' => $this->context->link->getModuleLink('technologie', 'technologie')
+        try {
+            $breadcrumb = parent::getBreadcrumbLinks();
+            
+            $breadcrumb['links'][] = [
+                'title' => $this->l('Technologie potisku'),
+                'url' => $this->context->link->getModuleLink('technologie', 'technologie')
+            ];
+            
+            return $breadcrumb;
+        } catch (\Exception $e) {
+            // Fallback - vrátíme základní strukturu
+            return [
+                'links' => [
+                    [
+                        'title' => $this->l('Domů'),
+                        'url' => $this->context->link->getPageLink('index')
+                    ],
+                    [
+                        'title' => $this->l('Technologie potisku'),
+                        'url' => ''
+                    ]
                 ]
-            ]
-        ];
-
-        $this->context->smarty->assign('breadcrumb', $breadcrumb);
+            ];
+        }
     }
 
     /**
@@ -311,3 +304,4 @@ class TechnologieTechnologieModuleFrontController extends ModuleFrontController
         ]);
     }
 }
+?>

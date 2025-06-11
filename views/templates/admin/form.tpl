@@ -1,6 +1,6 @@
 {**
- * Admin šablona pro formulář technologie - KRITICKY OPRAVENÁ VERZE
- * Problém: Nesprávné jméno submit tlačítka
+ * Admin šablona pro formulář technologie - PRODUKČNÍ VERZE BEZ DEBUG
+ * Soubor: views/templates/admin/form.tpl
  *}
 
 <div class="panel technologie-admin">
@@ -24,16 +24,7 @@
             </div>
         {/if}
 
-        {* KRITICKÁ OPRAVA: Přidán debug panel *}
-        <div id="debug-panel" style="background: #f0f0f0; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; font-family: monospace; font-size: 12px;">
-            <strong>🔧 DEBUG INFORMACE:</strong><br>
-            Table name: {$table|default:'NENÍ NASTAVENO'}<br>
-            Submit button name: submitAdd{$table|default:'technologie'}<br>
-            Is edit: {if $is_edit}ANO{else}NE{/if}<br>
-            <div id="form-debug-info"></div>
-        </div>
-
-        {* KRITICKY DŮLEŽITÉ: Správný action URL a enctype *}
+        {* FORMULÁŘ *}
         <form action="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}" 
               method="post" 
               enctype="multipart/form-data" 
@@ -91,7 +82,6 @@
                         </div>
                     {/if}
                     
-                    {* KRITICKY DŮLEŽITÉ: Správný name="image" *}
                     <input type="file"
                            name="image"
                            class="form-control"
@@ -101,7 +91,7 @@
                         {l s='Podporované formáty: JPG, PNG, GIF, WebP. Maximální velikost: 2MB.' mod='technologie'}
                     </p>
                     
-                    {* Live upload info *}
+                    {* Upload info *}
                     <div id="upload-info" style="margin-top: 10px; padding: 10px; background: #e8f4f8; border: 1px solid #bee5eb; border-radius: 4px; display: none;">
                         <strong>📁 Informace o souboru:</strong><br>
                         <span id="file-info"></span>
@@ -147,7 +137,6 @@
             {* Tlačítka *}
             <div class="form-group">
                 <div class="col-lg-9 col-lg-offset-3">
-                    {* KRITICKÁ OPRAVA: Správné jméno submit tlačítka *}
                     <button type="submit" name="submitAddtechnologie" value="1"
                             class="btn btn-primary btn-technologie"
                             id="submit-btn">
@@ -169,136 +158,81 @@
     </div>
 </div>
 
-{* Vylepšený JavaScript s kompletním debuggingem *}
-<script>
+{* Minimální JavaScript pro preview obrázků *}
+<script type="text/javascript">
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 Form script loaded');
-    
-    const form = document.getElementById('technologie-form');
-    const imageInput = document.getElementById('technologie-image-input');
-    const submitBtn = document.getElementById('submit-btn');
-    const debugInfo = document.getElementById('form-debug-info');
-    const uploadInfo = document.getElementById('upload-info');
-    const fileInfo = document.getElementById('file-info');
+    var imageInput = document.getElementById('technologie-image-input');
+    var uploadInfo = document.getElementById('upload-info');
+    var fileInfo = document.getElementById('file-info');
+    var submitBtn = document.getElementById('submit-btn');
+    var form = document.getElementById('technologie-form');
 
-    function updateDebug(message) {
-        const timestamp = new Date().toLocaleTimeString();
-        debugInfo.innerHTML += `[${timestamp}] ${message}<br>`;
-        console.log('🔧 DEBUG: ' + message);
-    }
-
-    updateDebug('JavaScript inicializován');
-    updateDebug('Submit button name: ' + (submitBtn ? submitBtn.name : 'NENALEZEN'));
-
-    // Enhanced image handling
+    // Image preview
     if (imageInput) {
         imageInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
+            var file = e.target.files[0];
             
             if (file) {
-                updateDebug(`Soubor vybrán: ${file.name} (${file.size} bytes, ${file.type})`);
-                
                 // Zobrazení file info
-                fileInfo.innerHTML = `
-                    <strong>Název:</strong> ${file.name}<br>
-                    <strong>Typ:</strong> ${file.type}<br>
-                    <strong>Velikost:</strong> ${(file.size / 1024).toFixed(1)} KB<br>
-                    <strong>Poslední změna:</strong> ${new Date(file.lastModified).toLocaleString()}
-                `;
+                fileInfo.innerHTML = 
+                    '<strong>Název:</strong> ' + file.name + '<br>' +
+                    '<strong>Typ:</strong> ' + file.type + '<br>' +
+                    '<strong>Velikost:</strong> ' + (file.size / 1024).toFixed(1) + ' KB';
                 uploadInfo.style.display = 'block';
                 
-                // Validace typu
+                // Validace
                 if (!file.type.match('image.*')) {
-                    alert('{l s="Vyberte prosím obrázek" mod="technologie"}');
+                    alert('{l s="Vyberte prosím obrázek" mod="technologie" js=1}');
                     this.value = '';
                     uploadInfo.style.display = 'none';
-                    updateDebug('CHYBA: Neplatný typ souboru');
                     return;
                 }
 
-                // Validace velikosti (2MB)
                 if (file.size > 2 * 1024 * 1024) {
-                    alert('{l s="Obrázek je příliš velký. Maximální velikost je 2MB" mod="technologie"}');
+                    alert('{l s="Obrázek je příliš velký. Maximální velikost je 2MB" mod="technologie" js=1}');
                     this.value = '';
                     uploadInfo.style.display = 'none';
-                    updateDebug('CHYBA: Soubor příliš velký');
                     return;
                 }
-
-                updateDebug('Validace souboru prošla');
 
                 // Preview
-                const reader = new FileReader();
+                var reader = new FileReader();
                 reader.onload = function(e) {
-                    // Odstranění starého preview
-                    const oldPreview = document.querySelector('.image-preview');
+                    var oldPreview = document.querySelector('.image-preview');
                     if (oldPreview) {
                         oldPreview.remove();
                     }
                     
-                    // Vytvoření nového preview
-                    const preview = document.createElement('div');
+                    var preview = document.createElement('div');
                     preview.className = 'image-preview mt-3';
-                    preview.innerHTML = `
-                        <p><strong>{l s="Náhled nového obrázku:" mod="technologie"}</strong></p>
-                        <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />
-                    `;
+                    preview.innerHTML = 
+                        '<p><strong>{l s="Náhled:" mod="technologie" js=1}</strong></p>' +
+                        '<img src="' + e.target.result + '" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />';
                     
                     imageInput.parentNode.appendChild(preview);
-                    updateDebug('Preview vytvořen');
                 };
                 reader.readAsDataURL(file);
             } else {
                 uploadInfo.style.display = 'none';
-                updateDebug('Soubor odstraněn');
             }
         });
     }
 
-    // Enhanced form submission
-    if (form) {
+    // Form submission
+    if (form && submitBtn) {
         form.addEventListener('submit', function(e) {
-            updateDebug('=== FORMULÁŘ SE ODESÍLÁ ===');
-            
-            const nameInput = document.querySelector('input[name="name"]');
+            var nameInput = document.querySelector('input[name="name"]');
             if (!nameInput.value.trim()) {
-                alert('{l s="Název technologie je povinný" mod="technologie"}');
+                alert('{l s="Název technologie je povinný" mod="technologie" js=1}');
                 e.preventDefault();
                 nameInput.focus();
-                updateDebug('CHYBA: Prázdný název - formulář zastaven');
                 return false;
             }
 
-            // Detailní debug form data
-            const formData = new FormData(form);
-            updateDebug('Form Data obsah:');
-            let hasFile = false;
-            for (let [key, value] of formData.entries()) {
-                if (key === 'image' && value instanceof File && value.size > 0) {
-                    updateDebug(`  ${key}: FILE - ${value.name} (${value.size} bytes)`);
-                    hasFile = true;
-                } else if (key === 'image') {
-                    updateDebug(`  ${key}: NO FILE`);
-                } else {
-                    updateDebug(`  ${key}: ${value}`);
-                }
-            }
-            
-            if (hasFile) {
-                updateDebug('✅ FORMULÁŘ OBSAHUJE SOUBOR K UPLOADU');
-            } else {
-                updateDebug('ℹ️ Formulář neobsahuje soubor k uploadu');
-            }
-
-            // Change button
             submitBtn.innerHTML = '<i class="icon-spinner icon-spin"></i> Ukládání...';
             submitBtn.disabled = true;
-            
-            updateDebug('✅ Formulář úspěšně odeslán');
         });
     }
-
-    updateDebug('JavaScript plně načten a připraven');
 });
 </script>
 
@@ -309,11 +243,6 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #dee2e6;
-}
-
-.image-preview img {
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .current-tech-image {
@@ -332,14 +261,5 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: #0056b3;
     border-color: #0056b3;
     color: white;
-}
-
-#debug-panel {
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-#upload-info {
-    font-size: 13px;
 }
 </style>

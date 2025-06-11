@@ -1,7 +1,6 @@
 <?php
 /**
- * Admin controller pro správu technologií - OPRAVENÁ VERZE
- * Problém: Nesprávná detekce submit tlačítka
+ * Admin controller pro správu technologií - PRODUKČNÍ VERZE
  */
 
 // Načtení autoloaderu modulu
@@ -45,23 +44,6 @@ class AdminTechnologieController extends ModuleAdminController
                 'icon' => 'icon-power-off text-danger'
             ]
         ];
-    }
-
-    /**
-     * Debug funkce pro logování
-     */
-    private function debugLog($message, $data = null) {
-        $logFile = _PS_MODULE_DIR_ . 'technologie/debug_upload.log';
-        $timestamp = date('Y-m-d H:i:s');
-        $logMessage = "[$timestamp] $message";
-        
-        if ($data !== null) {
-            $logMessage .= " | Data: " . print_r($data, true);
-        }
-        
-        $logMessage .= "\n" . str_repeat('-', 80) . "\n";
-        
-        file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
     }
 
     private function getTechnologieRepository()
@@ -117,14 +99,10 @@ class AdminTechnologieController extends ModuleAdminController
 
     private function validateUploadedFile(array $file): bool
     {
-        $this->debugLog("=== validateUploadedFile START ===");
-        $this->debugLog("Validace souboru", $file);
-        
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         $maxSize = 2 * 1024 * 1024; // 2MB
 
         if ($file['size'] > $maxSize) {
-            $this->debugLog("CHYBA: Soubor příliš velký: " . $file['size'] . " > $maxSize");
             $this->errors[] = $this->l('Soubor je příliš velký. Maximální velikost je 2MB');
             return false;
         }
@@ -134,10 +112,7 @@ class AdminTechnologieController extends ModuleAdminController
             $mimeType = finfo_file($finfo, $file['tmp_name']);
             finfo_close($finfo);
 
-            $this->debugLog("Detekovaný MIME typ: $mimeType");
-
             if (!in_array($mimeType, $allowedTypes)) {
-                $this->debugLog("CHYBA: Nepovolený MIME typ: $mimeType");
                 $this->errors[] = $this->l('Nepovolený typ souboru. Povolené: JPG, PNG, GIF, WebP');
                 return false;
             }
@@ -145,13 +120,10 @@ class AdminTechnologieController extends ModuleAdminController
 
         $imageInfo = getimagesize($file['tmp_name']);
         if ($imageInfo === false) {
-            $this->debugLog("CHYBA: getimagesize() vrátilo false");
             $this->errors[] = $this->l('Soubor není platný obrázek');
             return false;
         }
 
-        $this->debugLog("getimagesize OK: " . $imageInfo[0] . "x" . $imageInfo[1]);
-        $this->debugLog("=== validateUploadedFile END - SUCCESS ===");
         return true;
     }
 
@@ -179,133 +151,93 @@ class AdminTechnologieController extends ModuleAdminController
 
     private function handleImageUpload(array $file)
     {
-        $this->debugLog("=== handleImageUpload START ===");
-        $this->debugLog("Input file data", $file);
-        
         try {
             if ($file['error'] !== UPLOAD_ERR_OK) {
-                $this->debugLog("Upload error code: " . $file['error']);
                 $this->errors[] = $this->l('Chyba při nahrávání souboru');
                 return null;
             }
 
             if (!file_exists($file['tmp_name']) || !is_readable($file['tmp_name'])) {
-                $this->debugLog("CHYBA: tmp_name neexistuje nebo není čitelný: " . $file['tmp_name']);
                 $this->errors[] = $this->l('Dočasný soubor není dostupný');
                 return null;
             }
 
-            $this->debugLog("tmp_name OK, velikost: " . filesize($file['tmp_name']) . " bytes");
-
             if (!$this->validateUploadedFile($file)) {
-                $this->debugLog("Validace souboru selhala");
                 return null;
             }
-
-            $this->debugLog("Validace souboru prošla");
 
             $uploadDir = $this->ensureUploadDirectory();
             if (!$uploadDir) {
-                $this->debugLog("CHYBA: Nepodařilo se zajistit upload adresář");
                 return null;
             }
-
-            $this->debugLog("Upload adresář OK: $uploadDir");
 
             $filename = $this->generateSecureFilename($file);
             $targetPath = $uploadDir . $filename;
 
-            $this->debugLog("Generovaný název: $filename");
-            $this->debugLog("Cílová cesta: $targetPath");
-
-            $this->debugLog("Pokus o move_uploaded_file z '" . $file['tmp_name'] . "' do '$targetPath'");
-            
             if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                $this->debugLog("move_uploaded_file ÚSPĚŠNÝ");
-                
                 chmod($targetPath, 0644);
-                $this->debugLog("chmod 644 nastaven");
                 
                 if (file_exists($targetPath) && is_readable($targetPath)) {
-                    $actualSize = filesize($targetPath);
-                    $this->debugLog("ÚSPĚCH: Soubor existuje a je čitelný, velikost: $actualSize bytes");
-                    $this->debugLog("=== handleImageUpload END - SUCCESS ===");
                     return $filename;
                 } else {
-                    $this->debugLog("CHYBA: Soubor byl přesunut, ale není přístupný");
                     $this->errors[] = $this->l('Soubor byl nahrán, ale není přístupný');
                     return null;
                 }
             } else {
-                $this->debugLog("CHYBA: move_uploaded_file SELHAL");
                 $this->errors[] = $this->l('Nepodařilo se přesunout nahraný soubor');
                 return null;
             }
 
         } catch (\Exception $e) {
-            $this->debugLog("=== VÝJIMKA V handleImageUpload ===");
-            $this->debugLog("Chyba: " . $e->getMessage());
-            
             $this->errors[] = $this->l('Chyba při zpracování obrázku: ') . $e->getMessage();
             return null;
         }
     }
 
-    /**
-     * OPRAVENÁ VERZE - Lepší detekce submit tlačítka
-     */
     private function processFormSubmission($technologie = null)
     {
-        $this->debugLog("=== ZAČÁTEK processFormSubmission ===");
-        
-        // ROZŠÍŘENÁ DETEKCE SUBMIT TLAČÍTKA
+        // Rozšířená detekce submit tlačítka
         $isSubmitted = false;
-        $submitKeys = [];
+        $possibleSubmitKeys = [
+            'submitAddtechnologie',
+            'submitAdd' . $this->table,
+            'submitAdd',
+            'submit'
+        ];
         
-        foreach ($_POST as $key => $value) {
-            if (strpos($key, 'submit') === 0) {
-                $submitKeys[] = "$key = $value";
+        foreach ($possibleSubmitKeys as $key) {
+            if (isset($_POST[$key])) {
+                $isSubmitted = true;
+                break;
+            }
+        }
+        
+        // Alternativní detekce - pokud je POST a obsahuje povinná pole
+        if (!$isSubmitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_POST['name']) && !empty($_POST['name'])) {
                 $isSubmitted = true;
             }
         }
         
-        $this->debugLog("POST keys obsahující 'submit'", $submitKeys);
-        $this->debugLog("Je formulář odeslán? " . ($isSubmitted ? 'ANO' : 'NE'));
-        
-        // Pokud není detekován submit, ukončíme
         if (!$isSubmitted) {
-            $this->debugLog("Formulář nebyl odeslán - končím");
             return false;
         }
-        
-        try {
-            $this->debugLog("POST data", $_POST);
-            $this->debugLog("FILES data", $_FILES);
-            
-            $name = Tools::getValue('name');
-            $description = Tools::getValue('description', '');
-            $position = (int)Tools::getValue('position');
-            $active = Tools::getValue('active') ? true : false;
 
-            $this->debugLog("Zpracovaná data", [
-                'name' => $name,
-                'description' => $description,
-                'position' => $position,
-                'active' => $active
-            ]);
+        try {
+            $name = Tools::getValue('name', '');
+            $description = Tools::getValue('description', '');
+            $position = (int)Tools::getValue('position', 0);
+            $active = Tools::getValue('active') ? true : false;
 
             if (empty($name)) {
                 $this->errors[] = $this->l('Název technologie je povinný');
-                $this->debugLog("CHYBA: Prázdný název");
                 return false;
             }
 
             if ($this->id_object && $technologie && method_exists($technologie, 'setName')) {
                 $editTechnologie = $technologie;
-                $this->debugLog("EDITACE existující technologie ID: " . $this->id_object);
             } else {
                 $editTechnologie = new TechnologieEntity();
-                $this->debugLog("VYTVÁŘENÍ nové technologie");
             }
 
             $editTechnologie->setName($name);
@@ -315,79 +247,45 @@ class AdminTechnologieController extends ModuleAdminController
             if ($position <= 0) {
                 try {
                     $position = $this->getTechnologieRepository()->getMaxPosition() + 1;
-                    $this->debugLog("Automatická pozice nastavena na: $position");
                 } catch (\Exception $e) {
                     $position = 1;
-                    $this->debugLog("Chyba při získávání max pozice, nastaveno na 1: " . $e->getMessage());
                 }
             }
             $editTechnologie->setPosition($position);
 
-            $this->debugLog("=== ZPRACOVÁNÍ OBRÁZKU ===");
-            
+            // Zpracování obrázku
             $currentImage = '';
             if ($this->id_object && method_exists($editTechnologie, 'getImage')) {
                 $currentImage = $editTechnologie->getImage() ?? '';
-                $this->debugLog("Současný obrázek: " . ($currentImage ?: 'žádný'));
             }
 
-            $this->debugLog("Kontrola FILES image", isset($_FILES['image']) ? $_FILES['image'] : 'NENÍ NASTAVENO');
-
             if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                $this->debugLog("UPLOAD: Zahajuji upload nového obrázku");
-                
                 $newFilename = $this->handleImageUpload($_FILES['image']);
-                $this->debugLog("Výsledek handleImageUpload: " . ($newFilename ?: 'NULL/FALSE'));
                 
                 if ($newFilename) {
-                    $this->debugLog("ÚSPĚCH: Nový obrázek nahrán: $newFilename");
-                    
                     if ($currentImage && $currentImage !== $newFilename) {
-                        $this->debugLog("Mazání starého obrázku: $currentImage");
                         $this->deleteImageFile($currentImage);
                     }
                     
                     $editTechnologie->setImage($newFilename);
-                    $this->debugLog("Nový obrázek nastaven do entity: $newFilename");
                 } else {
-                    $this->debugLog("CHYBA: Upload se nezdařil, zachovávám starý obrázek");
                     if ($currentImage) {
                         $editTechnologie->setImage($currentImage);
                     }
                     return false;
                 }
             } else {
-                $this->debugLog("Žádný nový obrázek, zachovávám současný: " . ($currentImage ?: 'žádný'));
                 if ($currentImage) {
                     $editTechnologie->setImage($currentImage);
                 }
             }
 
-            $this->debugLog("Entity před uložením", [
-                'id' => method_exists($editTechnologie, 'getId') ? $editTechnologie->getId() : 'N/A',
-                'name' => $editTechnologie->getName(),
-                'image' => method_exists($editTechnologie, 'getImage') ? $editTechnologie->getImage() : 'N/A',
-                'position' => $editTechnologie->getPosition(),
-                'active' => $editTechnologie->isActive()
-            ]);
-
-            $this->debugLog("=== UKLÁDÁNÍ DO DATABÁZE ===");
+            // Uložení do databáze
             $this->getTechnologieRepository()->save($editTechnologie);
-            $this->debugLog("Úspěšně uloženo do databáze");
             
-            $this->debugLog("Entity po uložení", [
-                'id' => method_exists($editTechnologie, 'getId') ? $editTechnologie->getId() : 'N/A',
-                'name' => $editTechnologie->getName(),
-                'image' => method_exists($editTechnologie, 'getImage') ? $editTechnologie->getImage() : 'N/A'
-            ]);
-            
-            $this->debugLog("=== KONEC processFormSubmission - ÚSPĚCH ===");
             return true;
 
         } catch (\Exception $e) {
-            $this->debugLog("=== VÝJIMKA V processFormSubmission ===");
-            $this->debugLog("Chyba: " . $e->getMessage());
-            
             $this->errors[] = $this->l('Chyba při ukládání: ') . $e->getMessage();
             return false;
         }
@@ -437,19 +335,8 @@ class AdminTechnologieController extends ModuleAdminController
         }
     }
 
-    /**
-     * HLAVNÍ OPRAVA - Jednodušší a robustnější renderForm
-     */
     public function renderForm()
     {
-        $this->debugLog("=== ZAČÁTEK renderForm ===");
-        $this->debugLog("id_object: " . $this->id_object);
-        $this->debugLog("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
-        
-        // Jednodušší detekce POST
-        $isPostRequest = ($_SERVER['REQUEST_METHOD'] === 'POST');
-        $this->debugLog("Je POST request? " . ($isPostRequest ? 'ANO' : 'NE'));
-        
         // Načtení entity pro editaci
         $technologie = null;
         if ($this->id_object) {
@@ -459,48 +346,39 @@ class AdminTechnologieController extends ModuleAdminController
                     $this->errors[] = $this->l('Technologie nebyla nalezena');
                     return $this->renderList();
                 }
-                $this->debugLog("Technologie pro editaci načtena: " . $technologie->getName());
             } catch (\Exception $e) {
                 $this->errors[] = $this->l('Chyba při načítání technologie: ') . $e->getMessage();
                 return $this->renderList();
             }
         }
 
-        // Zpracování POST požadavku - BEZ PODMÍNEK NA SUBMIT KLÍČE
-        if ($isPostRequest) {
-            $this->debugLog("Zpracovávám POST formulář");
+        // Zpracování POST požadavku
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($this->processFormSubmission($technologie)) {
                 $this->confirmations[] = $this->l('Technologie byla úspěšně uložena');
-                $this->debugLog("Formulář úspěšně zpracován");
                 
                 if (empty($this->errors)) {
                     $adminLink = $this->context->link->getAdminLink('AdminTechnologie');
-                    $this->debugLog("Přesměrovávám na: $adminLink");
                     Tools::redirectAdmin($adminLink);
                 }
-            } else {
-                $this->debugLog("Formulář zpracován s chybami");
             }
         }
 
         // Příprava dat pro šablonu
         $technologieData = $this->prepareTechnologieData($technologie);
-        $this->debugLog("Data pro šablonu", $technologieData);
 
         $this->context->smarty->assign([
             'technologie' => $technologieData,
             'is_edit' => (bool)$this->id_object,
-            'table' => $this->table, // Důležité pro správné jméno submit tlačítka
+            'table' => $this->table,
             'upload_dir' => _MODULE_DIR_ . 'technologie/uploads/',
             'back_url' => $this->context->link->getAdminLink('AdminTechnologie'),
             'errors' => $this->errors
         ]);
 
-        $this->debugLog("=== KONEC renderForm ===");
         return $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'technologie/views/templates/admin/form.tpl');
     }
 
-    // Zbytek metod zůstává stejný...
     public function renderList()
     {
         $this->addCSS(_MODULE_DIR_ . 'technologie/views/css/admin.css');
@@ -624,7 +502,7 @@ class AdminTechnologieController extends ModuleAdminController
                 class="img-thumbnail">';
     }
 
-    // Bulk action metody...
+    // Bulk action metody
     public function processBulkDelete()
     {
         $ids = Tools::getValue('technologieBox');
